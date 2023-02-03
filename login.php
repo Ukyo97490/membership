@@ -1,42 +1,52 @@
-<?php
-require ('pdo.php');
-$title='Connexion';
+<?php 
+require('db.php');
+
+if(!empty($_SESSION['user'])){
+  header('Location: dashboard.php');
+}
+
+$title = 'Connexion';
 
 if(!empty($_POST))
 {
-    $post=filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-    extract($post);
-    $errors=[];
-    if(empty($email)||!filter_var($email,FILTER_VALIDATE_EMAIL)){
-        array_push($errors, 'L\'adresse email est incorrect.');
-    }
-    if(empty($password)){
-        array_push($errors, 'Le mot de passe est incorrect.');
-    }
-if(empty($errors)){
-    $req=$db->prepare('SELECT*FROM users WHERE email=:email');
-    $req->bindValue(':email',$email, PDO::PARAM_STR).
+  $post = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+  extract($post);
+
+  $errors = [];
+
+  if(empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)){
+    array_push($errors, 'L\'adresse email n\'est pas valide.');
+  }
+
+  if(empty($password)){
+    array_push($errors, 'Le mot de passe est requis.');
+  }
+
+
+  if(empty($errors))
+  {
+    $req = $db->prepare('SELECT * FROM users WHERE email=:email');
+    $req->bindValue(':email', $email, PDO::PARAM_STR);
     $req->execute();
 
-    $user=$req->fetch();
-    if($user && password_verify($password,$user->password)){
-       $_SESSION['user']=$user;
-       header('Location:dashboard.php');
-        
+    $user = $req->fetch();
+    if($user && password_verify($password, $user->password)){
+      $_SESSION['user'] = $user;
+      header('Location: dashboard.php');
     }
-    array_push($errors,'Identifiants incorrect');
+    array_push($errors, 'Mauvais identifiants');
+  }
 }
-}
+
 ?>
 
-<?php 
-include ('header.php')
-?>
 
-<h2><?=$title?></h2>
-<!-- Message d'alerte de réussite ou erreur  -->
-<?php include ('messages.php')?>
-<!-- FIN Message d'alerte de réussite ou erreur  -->
+<?php include('header.php');?>
+
+    <h2><?=$title;?></h2>
+
+    <?php include('messages.php');?>
+
     <form action="login.php" method="post">
       <div class="form-group">
         <label for="email">Email</label>
@@ -48,10 +58,9 @@ include ('header.php')
       </div>
       <button type="submit" class="btn btn-primary">Connexion</button>
     </form>
+    <br>
 
-  </div>
-</main>
-<?php
-include ('footer.php')
-?>
+    <p><a href="forgot.php">J'ai oublié mon mot de passe.</a></p>
+    <p><a href="index.php">Je veux ouvrir un compte.</a></p>
 
+<?php include('footer.php');?>
